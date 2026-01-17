@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth transition-colors duration-500">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Paker">
+    <meta name="keywords" content="个人主页">
+    <link rel="icon" href="favicon.png" type="image/x-icon">
+    <title>Paker的主页</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/qweather-icons@1.7.0/font/qweather-icons.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        @keyframes wave {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        .wave-container {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100px;
+            overflow: hidden;
+            line-height: 0;
+        }
+        .wave-svg {
+            position: relative;
+            display: block;
+            width: 200%;
+            height: 100px;
+            animation: wave 15s linear infinite;
+        }
+        .wave-shape {
+            fill: currentColor;
+            opacity: 0.2;
+        }
+        .wave-shape:nth-child(2) {
+            opacity: 0.3;
+            animation-delay: -3s;
+        }
+        .wave-shape:nth-child(3) {
+            opacity: 0.5;
+            animation-delay: -6s;
+        }
+
+        .transition-all-300 {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .backdrop-blur-xs {
+            backdrop-filter: blur(2px);
+        }
+
+        .avatar-loading {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .social-icon {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .social-icon:hover {
+            transform: translateY(-3px) scale(1.1);
+        }
+
+        #time-display-container {
+            height: 80px; 
+            display: flex;
+            align-items: center; 
+            justify-content: center;
+            min-width: 120px; 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #time-display-container:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        #time-display {
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 1px;
+            font-size: 2.25rem; 
+        }
+
+        #weather-card {
+            height: 80px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #weather-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            display: flex;
+        }
+
+        .modal-content {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 2rem;
+            border-radius: 1rem;
+            width: 90%;
+            max-width: 500px;
+            transform: translateY(30px) scale(0.95);
+            opacity: 0;
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+        }
+
+        .dark .modal-content {
+            background: rgba(31, 41, 55, 0.9);
+        }
+
+        .code-block {
+            background: rgba(248, 248, 248, 0.9);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-family: monospace;
+            margin: 1rem 0;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            overflow-x: auto;
+            user-select: all;
+            font-size: 0.9rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .code-block:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .dark .code-block {
+            background: rgba(55, 65, 81, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .copy-btn {
+            background: #3b82f6;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 500;
+        }
+
+        .copy-btn:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(37, 99, 235, 0.3);
+        }
+
+        .script-btn {
+            background: #3b82f6;
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 0.75rem;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .script-btn:hover {
+            background: #2563eb;
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+        }
+
+        .loader {
+            position: fixed;
+            inset: 0;
+            background: #f3f4f6;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.6s;
+        }
+
+        .loader.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .dark .loader {
+            background: #111827;
+        }
+
+        .loader-content {
+            background: white;
+            padding: 3rem;
+            border-radius: 1rem;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 90%;
+            transform: translateY(20px);
+            opacity: 0;
+            animation: slideUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        @keyframes slideUp {
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .dark .loader-content {
+            background: #1f2937;
+        }
+
+        .loader-text {
+            font-size: 1.75rem;
+            font-weight: bold;
+            margin-bottom: 2rem;
+            color: #374151;
+        }
+
+        .dark .loader-text {
+            color: #e5e7eb;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #e5e7eb;
+            border-radius: 50%;
+            border-top-color: #3b82f6;
+            animation: spin 1s cubic-bezier(0.68, -0.55, 0.27, 1.55) infinite;
+            margin: 0 auto 1.5rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loader-subtext {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        .dark .loader-subtext {
+            color: #9ca3af;
+        }
+
+        .hover-lift {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .hover-lift:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-entrance {
+            animation: cardEntrance 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        @keyframes cardEntrance {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .list-item-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .list-item-hover:hover {
+            transform: translateX(8px);
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .music-note {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 50;
+            color: #3b82f6;
+            font-size: 1.5rem;
+            animation: musicFloat 3s ease-in-out infinite;
+        }
+
+        @keyframes musicFloat {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(5deg); }
+        }
+
+        .dark .music-note {
+            color: #60a5fa;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 min-h-screen flex flex-col transition-colors duration-500">
+    <div class="loader">
+        <div class="loader-content">
+            <div class="spinner"></div>
+            <div class="loader-text">欢迎来到江砚辰的主页</div>
+            <div class="loader-subtext">正在加载...</div>
+        </div>
+    </div>
+
+    <div id="background" class="fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat opacity-20"></div>
+
+    <div class="music-note">
+        <i class="fas fa-music"></i>
+    </div>
+
+    <div id="time-display-container" class="fixed top-4 left-4 z-50 px-4 py-2 bg-white dark:bg-gray-800 rounded-lg shadow-md transition-all-300 backdrop-blur-xs bg-opacity-70 dark:bg-opacity-70 card-entrance" style="animation-delay: 0.1s">
+        <span id="time-display" class="text-2xl font-bold text-gray-700 dark:text-gray-200">--:--:--</span>
+    </div>
+
+    <div id="weather-card" class="fixed top-4 right-4 z-40 bg-white dark:bg-gray-800 rounded-xl shadow-md p-3 flex items-center space-x-3 transition-all-300 backdrop-blur-xs bg-opacity-70 dark:bg-opacity-70 card-entrance" style="animation-delay: 0.2s">
+        <i id="weather-icon" class="qi-200 text-4xl text-blue-500 dark:text-blue-400"></i> 
+        <div>
+            <p id="weather-city" class="text-sm font-semibold text-gray-700 dark:text-gray-200">加载中...</p>
+            <p id="weather-temp" class="text-xl font-bold text-gray-900 dark:text-gray-100">--°C</p>
+        </div>
+    </div>
+
+    <main class="flex-1 container mx-auto px-4 py-8 max-w-6xl relative z-0">
+        <section id="profile" class="mb-12 mt-24 md:mt-28">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden transition-all-300 backdrop-blur-xs bg-opacity-70 dark:bg-opacity-70 hover-lift card-entrance" style="animation-delay: 0.3s">
+                <div class="p-6 md:p-8 flex flex-col items-center md:flex-row md:items-start gap-6">
+                    <div class="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-white dark:border-gray-700 shadow overflow-hidden avatar-loading transition-all-300 hover:scale-105">
+                        <img id="avatar" src="https://i.ibb.co/zH46tpS1/avatar.jpg" alt="头像" class="w-full h-full object-cover" onload="this.parentElement.classList.remove('avatar-loading')">
+                    </div>
+                    <div class="flex-1 text-center md:text-left">
+                        <h1 id="nickname" class="text-2xl md:text-3xl font-bold mb-2 transition-all-300 hover:text-blue-500 dark:hover:text-blue-400">江砚辰</h1>
+                        <p id="bio" class="text-gray-600 dark:text-gray-400 mb-4">也许...往前看,会是一种结果</p>
+                        <div class="flex justify-center md:justify-start space-x-4">
+                            <a href="https://qm.qq.com/q/EaRHdmIHhm" id="qqLink" target="_blank" class="text-gray-700 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 text-xl social-icon">
+                                <i class="fab fa-qq"></i>
+                            </a>
+                            <a href="https://github.com/JanseJYC" target="_blank" class="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white text-xl social-icon">
+                                <i class="fab fa-github"></i>
+                            </a>
+                            <a href="https://v.douyin.com/KA-YOL45Vzw/" target="_blank" class="text-gray-700 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-400 text-xl social-icon">
+                                <i class="fab fa-tiktok"></i>
+                            </a>
+                            <a href="mailto:ccat@ccat.lol" class="text-gray-700 dark:text-gray-300 hover:text-yellow-500 dark:hover:text-yellow-400 text-xl social-icon">
+                                <i class="fas fa-envelope"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="hitokoto" class="mb-12">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 transition-all-300 backdrop-blur-xs bg-opacity-70 dark:bg-opacity-70 cursor-pointer hover-lift card-entrance" style="animation-delay: 0.4s" onclick="loadHitokoto()">
+                <p id="hitokoto-text" class="text-lg italic text-center">正在加载一言...</p>
+            </div>
+        </section>
+
+        <section id="works" class="mb-12">
+            <div class="flex items-center justify-between mb-6 card-entrance" style="animation-delay: 0.5s">
+                <h2 class="text-2xl font-bold transition-all-300 hover:text-blue-500 dark:hover:text-blue-400">支持服务器</h2>
+                <button class="script-btn" onclick="openScriptModal()">
+                    <i class="fas fa-code mr-2"></i>获取脚本
+                </button>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 transition-all-300 backdrop-blur-xs bg-opacity-70 dark:bg-opacity-70 hover-lift card-entrance" style="animation-delay: 0.6s">
+                    <h3 class="text-xl font-semibold mb-4 text-center transition-all-300 hover:text-blue-500 dark:hover:text-blue-400">支持的服务器列表</h3>
+                    <ul class="space-y-2">
+                        <li class="flex items-center p-2 rounded-lg list-item-hover">
+                            <span class="w-2 h-2 bg-blue-500 rounded-full mr-3 transition-all-300"></span>
+                            <span class="transition-all-300">亡命速递</span>
+                        </li>
+                        <li class="flex items-center p-2 rounded-lg list-item-hover">
+                            <span class="w-2 h-2 bg-blue-500 rounded-full mr-3 transition-all-300"></span>
+                            <span class="transition-all-300">doors</span>
+                        </li>
+                        <li class="flex items-center p-2 rounded-lg list-item-hover">
+                            <span class="w-2 h-2 bg-blue-500 rounded-full mr-3 transition-all-300"></span>
+                            <span class="transition-all-300">忍者传奇</span>
+                        </li>
+                        <li class="flex items-center p-2 rounded-lg list-item-hover">
+                            <span class="w-2 h-2 bg-blue-500 rounded-full mr-3 transition-all-300"></span>
+                            <span class="transition-all-300">极速传奇</span>
+                        </li>
+                        <li class="flex items-center p-2 rounded-lg list-item-hover">
+                            <span class="w-2 h-2 bg-blue-500 rounded-full mr-3 transition-all-300"></span>
+                            <span class="transition-all-300">力量传奇</span>
+                        </li>
+                        <li class="flex items-center p-2 rounded-lg list-item-hover">
+                            <span class="w-2 h-2 bg-blue-500 rounded-full mr-3 transition-all-300"></span>
+                            <span class="transition-all-300">吃掉世界</span>
+                        </li>
+                        <li class="flex items-center p-2 rounded-lg list-item-hover">
+                            <span class="w-2 h-2 bg-blue-500 rounded-full mr-3 transition-all-300"></span>
+                            <span class="transition-all-300">自然灾害</span>
+                        </li>
+                        <li class="flex items-center p-2 rounded-lg list-item-hover">
+                            <span class="w-2 h-2 bg-blue-500 rounded-full mr-3 transition-all-300"></span>
+                            <span class="transition-all-300">遍历翻译脚本</span>
+                        </li>
+                        <li class="flex items-center p-2 rounded-lg list-item-hover">
+                            <span class="w-2 h-2 bg-blue-500 rounded-full mr-3 transition-all-300"></span>
+                            <span class="transition-all-300">在森林里的99夜</span>
+                        </li>
+                        <li class="flex items-center p-2 rounded-lg list-item-hover">
+                            <span class="w-2 h-2 bg-blue-500 rounded-full mr-3 transition-all-300"></span>
+                            <span class="transition-all-300">Wanted(通缉)</span>
+                        </li>
+                        <li class="flex items-center p-2 rounded-lg list-item-hover">
+                            <span class="w-2 h-2 bg-blue-500 rounded-full mr-3 transition-all-300"></span>
+                            <span class="transition-all-300">Death Ball</span>
+                        </li>
+                        <li class="flex items-center p-2 rounded-lg list-item-hover">
+                            <span class="w-2 h-2 bg-blue-500 rounded-full mr-3 transition-all-300"></span>
+                            <span class="transition-all-300">Last Run</span>
+                        </li>
+                        <li class="flex items-center p-2 rounded-lg list-item-hover">
+                            <span class="w-2 h-2 bg-blue-500 rounded-full mr-3 transition-all-300"></span>
+                            <span class="transition-all-300">恐鬼症</span>
+                        </li>
+                        <li class="flex items-center p-2 rounded-lg list-item-hover">
+                            <span class="w-2 h-2 bg-blue-500 rounded-full mr-3 transition-all-300"></span>
+                            <span class="transition-all-300">终极战场</span>
+                        </li>
+                    </ul>
+                    <div class="mt-6">
+                        <a href="https://ibb.co/zhk0QNzr" target="_blank" class="block overflow-hidden rounded-lg shadow transition-all-300 hover:shadow-xl">
+                            <img src="https://i.ibb.co/bgf8Q7kP/20251226-060919.jpg" alt="20251226-060919" class="w-full h-48 object-cover transition-all-300 hover:scale-105">
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-white dark:bg-gray-800 shadow-inner backdrop-blur-xs bg-opacity-70 dark:bg-opacity-70 relative overflow-hidden py-4">
+        <div class="container mx-auto px-4">
+            <div class="text-center text-gray-600 dark:text-gray-400 relative z-10">
+                <p class="mb-1">© 2025 江砚辰の主页 All rights reserved.</p>
+                <a href="https://beian.miit.gov.cn" target="_blank" class="text-sm hover:text-blue-500 dark:hover:text-blue-400 transition-all-300">京ICP备88888888号</a>
+            </div>
+        </div>
+        <div class="wave-container">
+            <svg class="wave-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+                <path class="wave-shape" d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z" opacity=".25"></path>
+                <path class="wave-shape" d="M0,0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,62,103.63,73,40.44,10.79,81.35-6.69,119.13-24.28s75.16-39,116.92-43.05c59.73-5.85,113.28,22.88,168.9,38.84,30.2,8.66,59,6.17,87.09-7.5,22.43-10.89,48-26.93,60.65-49.24V0Z" opacity=".5"></path>
+                <path class="wave-shape" d="M0,0V5.63C149.93,59,314.09,71.32,475.83,42.57c43-7.64,84.23-20.12,127.61-26.46,59-8.63,112.48,12.24,165.56,35.4C827.93,77.22,886,95.24,951.2,90c86.53-7,172.46-45.71,248.8-84.81V0Z"></path>
+            </svg>
+        </div>
+    </footer>
+
+    <div id="scriptModal" class="modal-overlay" onclick="closeScriptModal(event)">
+        <div class="modal-content">
+            <h2 class="text-xl font-bold mb-4 transition-all-300 hover:text-blue-500 dark:hover:text-blue-400">脚本链接</h2>
+            <div class="code-block" id="scriptCode">
+                loadstring(game:HttpGet("https://raw.githubusercontent.com/JanseJYC/Script/refs/heads/Hub/ASE%20Hub.lua"))()
+            </div>
+            <div class="flex justify-between">
+                <button class="copy-btn" onclick="copyScript()">
+                    <i class="fas fa-copy mr-2"></i>复制代码
+                </button>
+                <button class="copy-btn bg-red-500 hover:bg-red-600" onclick="closeScriptModal()">
+                    <i class="fas fa-times mr-2"></i>关闭
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const config = {
+            qqNumber: '2556017764',
+            backgroundImage: 'https://picsum.photos/1920/1080',
+            defaultWeatherCity: '泉州'
+        };
+
+        let bgMusic = new Audio('http://music.163.com/song/media/outer/url?id=1414845505.mp3');
+        bgMusic.loop = true;
+        bgMusic.volume = 0.3;
+
+        function startMusic() {
+            bgMusic.play().catch(e => {
+                document.body.addEventListener('click', function initMusic() {
+                    bgMusic.play();
+                    document.body.removeEventListener('click', initMusic);
+                });
+            });
+        }
+
+        function loadHitokoto() {
+            const hitokotoText = document.getElementById('hitokoto-text');
+            hitokotoText.classList.add('transition-all-300');
+            hitokotoText.textContent = 'Loading...';
+            
+            setTimeout(() => {
+                fetch('https://api.fohok.xin/API/yiyan2.php')
+                    .then(response => response.ok ? response.text() : Promise.reject('网络请求失败'))
+                    .then(text => {
+                        hitokotoText.textContent = text;
+                    })
+                    .catch(error => {
+                        console.error('加载一言失败:', error);
+                        hitokotoText.textContent = '生活不止眼前的苟且，还有诗和远方';
+                    });
+            }, 300);
+        }
+
+        function loadUserInfo() {
+            const avatarEl = document.getElementById('avatar');
+            avatarEl.onload = () => avatarEl.parentElement.classList.remove('avatar-loading');
+            avatarEl.onerror = () => {
+                avatarEl.parentElement.classList.remove('avatar-loading');
+            };
+        }
+
+        function updateTime() {
+            const timeDisplayEl = document.getElementById('time-display');
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            timeDisplayEl.textContent = `${hours}:${minutes}:${seconds}`;
+        }
+
+        function setupTheme() {
+            const htmlEl = document.documentElement;
+            if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                htmlEl.classList.add('dark');
+            } else {
+                htmlEl.classList.remove('dark');
+            }
+        }
+
+        async function getCityNameFromCoordinates(latitude, longitude) {
+            try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                
+                return data.address?.city || data.address?.town || data.address?.village || data.address?.county || null;
+            } catch (error) {
+                console.error('获取城市名称失败:', error);
+                return null;
+            }
+        }
+
+        async function loadWeatherData(city) {
+            const weatherCityEl = document.getElementById('weather-city');
+            const weatherTempEl = document.getElementById('weather-temp');
+            const weatherIconEl = document.getElementById('weather-icon');
+
+            weatherCityEl.textContent = '加载中...';
+            weatherTempEl.textContent = '--°C';
+            weatherIconEl.className = 'qi-200 text-4xl text-blue-500 dark:text-blue-400';
+
+            try {
+                const response = await fetch(`https://api.fohok.xin/API/hftq.php?city=${encodeURIComponent(city)}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                
+                if (data.code === 200 && data.data) {
+                    setTimeout(() => {
+                        weatherCityEl.textContent = data.city;
+                        weatherTempEl.textContent = `${data.data.temp}°C`;
+                        weatherIconEl.className = `qi-${data.data.icon} text-4xl text-blue-500 dark:text-blue-400`;
+                    }, 300);
+                } else {
+                    console.error('天气数据获取失败:', data.message || '未知错误');
+                    weatherCityEl.textContent = '获取失败';
+                    weatherTempEl.textContent = '--°C';
+                    weatherIconEl.className = 'qi-200 text-4xl text-gray-500 dark:text-gray-400';
+                }
+            } catch (error) {
+                console.error('加载天气数据失败:', error);
+                weatherCityEl.textContent = '获取失败';
+                weatherTempEl.textContent = '--°C';
+                weatherIconEl.className = 'qi-200 text-4xl text-gray-500 dark:text-gray-400';
+            }
+        }
+
+        function initializeUI() {
+            const background = document.getElementById('background');
+
+            if (config.backgroundImage) {
+                background.style.backgroundImage = `url(${config.backgroundImage})`;
+                document.querySelectorAll('.backdrop-blur-xs').forEach(el => el.classList.add('backdrop-blur-xs'));
+            }
+
+            setupTheme();
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    async (position) => {
+                        const { latitude, longitude } = position.coords;
+                        const cityName = await getCityNameFromCoordinates(latitude, longitude);
+                        loadWeatherData(cityName || config.defaultWeatherCity);
+                    },
+                    (error) => {
+                        console.warn('无法获取用户定位，原因:', error.message);
+                        loadWeatherData(config.defaultWeatherCity);
+                    },
+                    { enableHighAccuracy: false, timeout: 5000, maximumAge: 0 }
+                );
+            } else {
+                console.warn('浏览器不支持定位');
+                loadWeatherData(config.defaultWeatherCity);
+            }
+
+            setInterval(updateTime, 1000);
+            updateTime();
+        }
+
+        function openScriptModal() {
+            const modal = document.getElementById('scriptModal');
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeScriptModal(event) {
+            if (event && event.target.id === 'scriptModal') {
+                const modal = document.getElementById('scriptModal');
+                modal.classList.remove('active');
+                document.body.style.overflow = '';
+            } else if (!event) {
+                const modal = document.getElementById('scriptModal');
+                modal.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        function copyScript() {
+            const code = document.getElementById('scriptCode').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check mr-2"></i>已复制';
+                
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                }, 2000);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                document.querySelector('.loader').classList.add('hidden');
+                loadUserInfo();
+                loadHitokoto();
+                initializeUI();
+                startMusic();
+                
+                const cards = document.querySelectorAll('.card-entrance');
+                cards.forEach((card, index) => {
+                    card.style.animationDelay = `${0.1 + index * 0.1}s`;
+                });
+            }, 1500);
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeScriptModal();
+            }
+        });
+    </script>
+</body>
+</html>
